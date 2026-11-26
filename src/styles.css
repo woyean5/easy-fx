@@ -118,3 +118,63 @@ input.text { width: 100%; height: 48px; border-radius: 12px; border: 1px solid v
 @keyframes flash { 0% { opacity: .7; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .stopout.anim, .stopout.anim .flash, .hint, .sheet { animation: none; } }
 .stopout .btn:not(.primary) { background: #2c2c2e; color: #fff; }
+
+/* ───────── 애플 주식 앱 스타일 ───────── */
+:root { --tabbar-h: 56px; --group: #1c1c1e; --sep: rgba(84, 84, 88, .55); }
+@media (prefers-color-scheme: light) { :root { --group: #fff; --sep: rgba(60, 60, 67, .2); } body { background: #f2f2f7; } :root { --bg: #f2f2f7; } }
+.screen.tabbed { padding-bottom: calc(var(--tabbar-h) + max(16px, env(safe-area-inset-bottom)) + 8px); }
+.large-title h1 { font-size: 34px; font-weight: 800; letter-spacing: .2px; margin: 0; }
+.large-title .subtitle { font-size: 22px; font-weight: 700; color: var(--muted); margin-top: -2px; }
+.title-row { display: flex; align-items: baseline; justify-content: space-between; }
+.section-title { font-size: 20px; font-weight: 700; margin: 4px 0 8px; }
+.card { background: var(--group); border-radius: 14px; padding: 14px 16px; }
+.account-row { display: flex; align-items: center; justify-content: space-between; margin: 2px 0 6px; }
+.account-eq { font-size: 30px; letter-spacing: -.5px; }
+.account-sub { display: flex; justify-content: space-between; }
+.banner { background: rgba(255, 159, 10, .16); color: #ff9f0a; border-radius: 10px; padding: 10px 12px; font-size: 14px; }
+.footnote { font-size: 12px; color: var(--muted); margin: 10px 0 0; line-height: 1.45; }
+
+.watchlist { display: flex; flex-direction: column; }
+.watch-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 11px 0; border-bottom: .5px solid var(--sep); text-align: left; width: 100%; }
+.watch-row:active { opacity: .6; }
+.watch-name { min-width: 0; display: flex; flex-direction: column; }
+.watch-name b { font-size: 17px; font-weight: 700; }
+.watch-name span { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.watch-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.watch-price { font-size: 16px; font-weight: 600; }
+.watch-right .pill { min-width: 72px; padding: 3px 6px; font-size: 14px; border-radius: 6px; }
+
+.group { background: var(--group); border-radius: 14px; padding: 0 16px; }
+.group > .btn { margin-bottom: 14px; }
+.cell { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: .5px solid var(--sep); width: 100%; text-align: left; }
+.cell:last-child, .group > .cell:last-of-type { border-bottom: 0; }
+.cell-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tag { margin-left: 6px; font-size: 11px; font-weight: 700; color: #fff; background: var(--down); border-radius: 4px; padding: 1px 5px; vertical-align: 2px; }
+.btn.danger { background: rgba(255, 69, 58, .15); color: var(--down); }
+
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; justify-content: center; gap: 0;
+  padding: 6px 0 max(6px, env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-top: .5px solid var(--sep); }
+.tabbar button { flex: 1; max-width: 160px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10px; font-weight: 600; color: var(--muted); }
+.tabbar button.on { color: var(--accent); }
+
+.segmented { display: flex; background: var(--surface-2); border-radius: 9px; padding: 2px; gap: 2px; }
+.segmented button { flex: 1; height: 32px; border-radius: 7px; font-size: 14px; font-weight: 600; color: var(--text); }
+.segmented button.on { background: var(--group); box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+@media (prefers-color-scheme: dark) { .segmented button.on { background: #636366; } }
+.segmented button.locked { opacity: .45; }
+.row-label { margin-bottom: 6px; }
+
+.detail { position: fixed; inset: 0; z-index: 25; background: var(--bg); overflow-y: auto; max-width: 480px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 14px; padding: max(8px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); animation: up .28s cubic-bezier(.2,.8,.2,1); }
+.detail-head { display: flex; justify-content: space-between; align-items: flex-start; }
+.detail-head h1 { font-size: 28px; margin: 0; font-weight: 800; }
+.close-btn { width: 30px; height: 30px; border-radius: 15px; background: var(--surface-2); color: var(--muted); font-size: 14px; font-weight: 700; }
+.detail-price { font-size: 34px; font-weight: 700; letter-spacing: -.5px; }
+.guide-banner { text-align: left; width: 100%; }
+.stats .stat { background: var(--group); }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); border-top: .5px solid var(--sep); border-bottom: .5px solid var(--sep); padding: 8px 0; }
+.stat-grid div { display: flex; justify-content: space-between; padding: 0 8px; font-size: 13px; }
+.stat-grid div + div { border-left: .5px solid var(--sep); }
+.stat-grid span { color: var(--muted); }
+.pill.flat { background: var(--surface-2); color: var(--text); }

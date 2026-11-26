@@ -2,45 +2,66 @@ import { useState } from 'react'
 import { Home } from './screens/Home'
 import { TradeScreen } from './screens/Trade'
 import { Result } from './screens/Result'
+import { LiveHome } from './screens/LiveHome'
+import { LiveDetail } from './screens/LiveDetail'
+import { History } from './screens/History'
 import { GuideCards } from './guide/GuideCards'
 import { NicknamePrompt } from './components/NicknamePrompt'
+import { TabBar, type Tab } from './components/TabBar'
+import { LiveStopOutNotice } from './components/LiveStopOutNotice'
 import { addRecord, getNickname } from './storage/storage'
+import { useLive } from './live/useLive'
+import type { LivePair } from './live/quotes'
 import type { Route } from './screens/types'
 
 export default function App() {
+  const [tab, setTab] = useState<Tab>('live')
   const [route, setRoute] = useState<Route>({ name: 'home' })
+  const [detail, setDetail] = useState<LivePair | null>(null)
   const [guide, setGuide] = useState(false)
   const [askName, setAskName] = useState(() => getNickname() === null)
-  // 같은 시나리오를 다시 할 때 거래 화면을 새로 만들기 위한 키
   const [round, setRound] = useState(0)
+  const live = useLive()
 
-  const start = (scenario: Route & { name: 'trade' }) => { setRound(r => r + 1); setRoute(scenario) }
+  const start = (r: Route & { name: 'trade' }) => { setRound(n => n + 1); setRoute(r) }
+
+  // 연습 판 진행/결과 화면은 탭 바 없이 전체 화면
+  if (route.name === 'trade') {
+    return (
+      <TradeScreen
+        key={round}
+        scenario={route.scenario}
+        leverage={route.leverage}
+        onQuit={() => setRoute({ name: 'home' })}
+        onFinish={result => { addRecord(result.record); setRoute({ name: 'result', result }) }}
+      />
+    )
+  }
+  if (route.name === 'result') {
+    return (
+      <Result
+        result={route.result}
+        onHome={() => setRoute({ name: 'home' })}
+        onRetry={leverage => start({ name: 'trade', scenario: route.result.scenario, leverage })}
+      />
+    )
+  }
 
   return (
     <>
-      {route.name === 'home' && (
+      {tab === 'live' && <LiveHome live={live} onOpen={setDetail} />}
+      {tab === 'practice' && (
         <Home
           onStart={(scenario, leverage) => start({ name: 'trade', scenario, leverage })}
           onOpenGuide={() => setGuide(true)}
           onEditNickname={() => setAskName(true)}
         />
       )}
-      {route.name === 'trade' && (
-        <TradeScreen
-          key={round}
-          scenario={route.scenario}
-          leverage={route.leverage}
-          onQuit={() => setRoute({ name: 'home' })}
-          onFinish={result => { addRecord(result.record); setRoute({ name: 'result', result }) }}
-        />
-      )}
-      {route.name === 'result' && (
-        <Result
-          result={route.result}
-          onHome={() => setRoute({ name: 'home' })}
-          onRetry={leverage => start({ name: 'trade', scenario: route.result.scenario, leverage })}
-        />
-      )}
+      {tab === 'history' && <History live={live} />}
+      <TabBar tab={tab} onChange={setTab} />
+
+      {detail && <LiveDetail pair={detail} live={live} onClose={() => setDetail(null)} onOpenGuide={() => setGuide(true)} />}
+      {live.notice && <LiveStopOutNotice notice={live.notice} onClose={live.dismissNotice} />}
       {guide && <GuideCards onClose={() => setGuide(false)} />}
       {askName && <NicknamePrompt onDone={() => setAskName(false)} />}
     </>

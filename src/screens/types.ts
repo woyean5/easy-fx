@@ -18,8 +18,17 @@ export type Route =
   | { name: 'trade'; scenario: Scenario; leverage: number }
   | { name: 'result'; result: RoundResult }
 
-export const PAIR_LABEL: Record<string, string> = { USDJPY: 'USD/JPY', EURUSD: 'EUR/USD', AUDUSD: 'AUD/USD', GBPUSD: 'GBP/USD' }
+export const PAIR_LABEL: Record<string, string> = { USDJPY: 'USD/JPY', EURUSD: 'EUR/USD', AUDUSD: 'AUD/USD', GBPUSD: 'GBP/USD', USDKRW: 'USD/KRW' }
 
-export const fmtPrice = (pair: string, p: number) => p.toFixed(pair.endsWith('JPY') ? 3 : 5)
-export const fmtUsd = (n: number) => (n < 0 ? '-$' : '$') + Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 })
-export const fmtPct = (n: number) => (n > 0 ? '+' : '') + n.toFixed(2) + '%'
+export const fmtPrice = (pair: string, p: number) => p.toFixed(pair.endsWith('KRW') ? 2 : pair.endsWith('JPY') ? 3 : 5)
+export const fmtUsd = (n: number) => {
+  const a = Math.abs(n), digits = a < 100 && a > 0 ? 2 : 0
+  const txt = a.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
+  return (n < 0 && Number(txt.replace(/,/g, '')) !== 0 ? '-$' : '$') + txt
+}
+export const fmtPct = (n: number) => {
+  const r = Number(n.toFixed(2))
+  return (r > 0 ? '+' : '') + (r === 0 ? '0.00' : r.toFixed(2)) + '%'
+}
+/** 등락 배지 색: 0으로 반올림되면 회색 */
+export const trendClass = (n: number) => (Math.abs(n) < 0.005 ? 'flat' : n > 0 ? 'up' : 'down')

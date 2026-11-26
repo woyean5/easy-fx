@@ -1,35 +1,48 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Home } from './screens/Home'
+import { TradeScreen } from './screens/Trade'
+import { Result } from './screens/Result'
+import { GuideCards } from './guide/GuideCards'
+import { NicknamePrompt } from './components/NicknamePrompt'
+import { addRecord, getNickname } from './storage/storage'
+import type { Route } from './screens/types'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [route, setRoute] = useState<Route>({ name: 'home' })
+  const [guide, setGuide] = useState(false)
+  const [askName, setAskName] = useState(() => getNickname() === null)
+  // 같은 시나리오를 다시 할 때 거래 화면을 새로 만들기 위한 키
+  const [round, setRound] = useState(0)
+
+  const start = (scenario: Route & { name: 'trade' }) => { setRound(r => r + 1); setRoute(scenario) }
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {route.name === 'home' && (
+        <Home
+          onStart={(scenario, leverage) => start({ name: 'trade', scenario, leverage })}
+          onOpenGuide={() => setGuide(true)}
+          onEditNickname={() => setAskName(true)}
+        />
+      )}
+      {route.name === 'trade' && (
+        <TradeScreen
+          key={round}
+          scenario={route.scenario}
+          leverage={route.leverage}
+          onQuit={() => setRoute({ name: 'home' })}
+          onFinish={result => { addRecord(result.record); setRoute({ name: 'result', result }) }}
+        />
+      )}
+      {route.name === 'result' && (
+        <Result
+          result={route.result}
+          onHome={() => setRoute({ name: 'home' })}
+          onRetry={leverage => start({ name: 'trade', scenario: route.result.scenario, leverage })}
+        />
+      )}
+      {guide && <GuideCards onClose={() => setGuide(false)} />}
+      {askName && <NicknamePrompt onDone={() => setAskName(false)} />}
     </>
   )
 }
-
-export default App

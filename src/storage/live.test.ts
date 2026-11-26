@@ -27,3 +27,10 @@ test('ticks are capped at 2000 per pair', () => {
   expect(t).toHaveLength(2000)
   expect(t[0].t).toBe(5)
 })
+
+test('corrupted live data falls back to a fresh account', () => {
+  localStorage.setItem('easyfx:live', 'null')
+  expect(s.getLive(7)).toEqual(newLiveAccount(7))
+  localStorage.setItem('easyfx:live', '{"balance":"x"}')
+  expect(s.getLive(7)).toEqual(newLiveAccount(7))
+})

@@ -96,9 +96,13 @@ export function replayOffline(
   candles: Partial<Record<LivePair, Candle[]>>,
   mids: Mids,
   now: number,
+  /** 불러온 봉의 길이(초). 마지막 확인 시각이 들어 있는 봉부터 본다 */
+  intervalSec = 900,
 ): { acc: LiveAccount; trades: ClosedTrade[]; stoppedAt: number | null } {
-  const from = Math.floor(acc.lastSeen / 900) * 900
-  const times = [...new Set(Object.values(candles).flatMap(cs => (cs ?? []).filter(c => c.t >= from).map(c => c.t)))].sort((a, b) => a - b)
+  const from = Math.floor(acc.lastSeen / intervalSec) * intervalSec
+  // 포지션을 잡기 전에 시작한 봉은 그 전 가격이 섞여 있으므로 그 포지션에는 쓰지 않는다
+  const usable = (pair: LivePair) => (candles[pair] ?? []).filter(c => c.t >= from && c.t >= acc.positions[pair]!.openedAt)
+  const times = [...new Set(entries(acc).flatMap(([pair]) => usable(pair).map(c => c.t)))].sort((a, b) => a - b)
   const last: Mids = { ...mids }
   // 봉이 있는 통화쌍은 오래된 값부터 다시 채운다
   for (const [pair] of entries(acc)) if (candles[pair]?.length) last[pair] = acc.positions[pair]!.entry
@@ -106,7 +110,7 @@ export function replayOffline(
   for (const t of times) {
     const worst: Mids = { ...last }
     for (const [pair, pos] of entries(acc)) {
-      const c = candles[pair]?.find(x => x.t === t)
+      const c = usable(pair).find(x => x.t === t)
       if (!c) continue
       worst[pair] = pos.side === 'buy' ? c.l : c.h
       last[pair] = c.c

@@ -19,7 +19,7 @@ const RANGES: { id: Range; label: string; interval: number; seconds: number }[] 
 interface Props { pair: LivePair; live: LiveApi; onClose: () => void; onOpenGuide: () => void }
 
 export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
-  const { acc, mids, offline } = live
+  const { acc, mids } = live
   const info = live.info(pair)
   const mid = info.mid
   const [range, setRange] = useState<Range>('1D')
@@ -58,7 +58,7 @@ export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
   const chg = shown && first ? ((shown.p - first) / first) * 100 : null
   const free = Math.max(0, freeMargin(acc, mids))
   const margin = Math.floor((free * pct) / 100)
-  const blocked = info.stale || offline || mid === undefined
+  const blocked = info.stale || info.down || mid === undefined
 
   const tap = () => {
     if (isTooSoon(lastAction.current, performance.now())) return false
@@ -105,6 +105,7 @@ export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
       {!hasHistory(pair) && <p className="footnote">이 통화는 과거 차트를 제공하지 않아 앱을 켜둔 동안 받은 시세로 그려요.</p>}
 
       {info.stale && <div className="banner">지금은 외환시장이 쉬는 시간이에요. 주문할 수 없어요.</div>}
+      {info.down && <div className="banner">시세 연결이 끊겨서 지금은 주문할 수 없어요.</div>}
 
       {pos ? (
         <div className="group">

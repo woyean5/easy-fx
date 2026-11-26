@@ -56,7 +56,11 @@ function readJson<T>(key: string, fallback: T): T {
   try { const v = read(key); return v === null ? fallback : JSON.parse(v) } catch { return fallback }
 }
 
-export function getLive(now: number): LiveAccount { return readJson('live', newLiveAccount(now)) }
+export function getLive(now: number): LiveAccount {
+  const v = readJson<LiveAccount | null>('live', null)
+  const ok = v && typeof v === 'object' && Number.isFinite(v.balance) && Number.isFinite(v.lastSeen) && v.positions && typeof v.positions === 'object'
+  return ok ? v : newLiveAccount(now)
+}
 export function saveLive(acc: LiveAccount): void { write('live', JSON.stringify(acc)) }
 
 export function getLiveHistory(): ClosedTrade[] { return readJson('liveHistory', []) }

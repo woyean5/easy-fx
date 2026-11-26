@@ -57,3 +57,17 @@ test('offline candles that stayed safe change nothing', () => {
   expect(r.acc.positions.EURUSD).toBeDefined()
   expect(r.acc.lastSeen).toBe(400)
 })
+
+test('4h candles: the candle containing lastSeen is still checked', () => {
+  const a = openLive(newLiveAccount(0), 'EURUSD', 'buy', 5000, 30, { EURUSD: 1.1 }, 0)
+  const acc = { ...a, lastSeen: 15500 } // 4시간봉 14400 안에 있음
+  const r = replayOffline(acc, { EURUSD: [{ t: 14400, o: 1.1, h: 1.1, l: 1.04, c: 1.1 }] }, { EURUSD: 1.1 }, 99999, 14400)
+  expect(r.stoppedAt).toBe(14400)
+})
+
+test('candles that started before the position was opened are ignored', () => {
+  const a = openLive(newLiveAccount(1000), 'EURUSD', 'buy', 5000, 30, { EURUSD: 1.1 }, 1000)
+  const r = replayOffline(a, { EURUSD: [{ t: 900, o: 1.04, h: 1.1, l: 1.04, c: 1.1 }] }, { EURUSD: 1.1 }, 5000)
+  expect(r.stoppedAt).toBeNull()
+  expect(r.acc.positions.EURUSD).toBeDefined()
+})

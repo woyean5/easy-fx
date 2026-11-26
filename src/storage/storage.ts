@@ -1,3 +1,5 @@
+import { newLiveAccount, type ClosedTrade, type LiveAccount } from '../live/account'
+import type { LivePair } from '../live/quotes'
 // 저장은 전부 이 모듈을 거친다. 2단계에서 서버를 붙일 때 이 파일만 바꾼다.
 export interface RoundRecord {
   scenarioId: string
@@ -47,3 +49,31 @@ export function bestReturn(scenarioId: string): number | null {
 
 export function isGuideDone(): boolean { return read('guideDone') === '1' }
 export function setGuideDone(): void { write('guideDone', '1') }
+
+// ── 실시간 계좌 ──
+
+function readJson<T>(key: string, fallback: T): T {
+  try { const v = read(key); return v === null ? fallback : JSON.parse(v) } catch { return fallback }
+}
+
+export function getLive(now: number): LiveAccount { return readJson('live', newLiveAccount(now)) }
+export function saveLive(acc: LiveAccount): void { write('live', JSON.stringify(acc)) }
+
+export function getLiveHistory(): ClosedTrade[] { return readJson('liveHistory', []) }
+export function addLiveTrades(trades: ClosedTrade[]): void {
+  if (trades.length) write('liveHistory', JSON.stringify([...getLiveHistory(), ...trades]))
+}
+
+/** 계좌를 $10,000로 되돌리고 실시간 거래 기록도 지운다. 시나리오 기록은 남긴다. */
+export function resetLive(now: number): void {
+  saveLive(newLiveAccount(now))
+  write('liveHistory', '[]')
+}
+
+export const MAX_TICKS = 2000
+export function getTicks(pair: LivePair): { t: number; p: number }[] { return readJson(`ticks:${pair}`, []) }
+export function pushTick(pair: LivePair, t: number, p: number): void {
+  const ticks = getTicks(pair)
+  if (ticks.length && ticks[ticks.length - 1].p === p && t - ticks[ticks.length - 1].t < 300) return
+  write(`ticks:${pair}`, JSON.stringify([...ticks, { t, p }].slice(-MAX_TICKS)))
+}

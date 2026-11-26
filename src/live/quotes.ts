@@ -35,7 +35,7 @@ export function parseKrakenTicker(json: KrakenJson): Mids {
   return out
 }
 
-export function parseCoinbaseRates(json: { data: { rates: Record<string, string> } }): Mids {
+export function parseCoinbaseRates(json: { data: { currency?: string; rates: Record<string, string> } }): Mids {
   const r = json.data.rates
   const out: Mids = {}
   if (Number(r.JPY) > 0) out.USDJPY = Number(r.JPY)
@@ -70,4 +70,11 @@ export async function fetchCandles(pair: LivePair, interval: number, since?: num
   const q = since ? `&since=${since}` : ''
   const r = await fetch(`https://api.kraken.com/0/public/OHLC?pair=${pair}&interval=${interval}${q}`)
   return parseKrakenOhlc(await r.json())
+}
+
+/** 외환시장 주말 휴장: 금요일 22:00 UTC ~ 일요일 22:00 UTC */
+export function isFxWeekend(nowSec: number): boolean {
+  const d = new Date(nowSec * 1000)
+  const day = d.getUTCDay(), h = d.getUTCHours()
+  return (day === 5 && h >= 22) || day === 6 || (day === 0 && h < 22)
 }

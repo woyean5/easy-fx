@@ -34,3 +34,11 @@ test('isStale after one hour', () => {
   expect(isStale(0, 3600)).toBe(false)
   expect(isStale(0, 3601)).toBe(true)
 })
+
+import { isFxWeekend } from './quotes'
+test('fx weekend window', () => {
+  expect(isFxWeekend(Date.UTC(2026, 10, 27, 21) / 1000)).toBe(false) // 금 21시
+  expect(isFxWeekend(Date.UTC(2026, 10, 27, 22) / 1000)).toBe(true)  // 금 22시
+  expect(isFxWeekend(Date.UTC(2026, 10, 28, 12) / 1000)).toBe(true)  // 토
+  expect(isFxWeekend(Date.UTC(2026, 10, 29, 22) / 1000)).toBe(false) // 일 22시
+})

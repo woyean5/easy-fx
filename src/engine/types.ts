@@ -1,4 +1,4 @@
-export type Pair = 'USDJPY' | 'EURUSD' | 'AUDUSD' | 'GBPUSD'
+export type Pair = 'USDJPY' | 'EURUSD' | 'AUDUSD' | 'GBPUSD' | 'USDKRW'
 export type Side = 'buy' | 'sell'
 
 export interface Position {

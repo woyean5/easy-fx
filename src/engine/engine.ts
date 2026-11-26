@@ -8,10 +8,11 @@ export const SPREAD_PIPS: Record<Pair, number> = {
   EURUSD: 0.8,
   AUDUSD: 1.0,
   GBPUSD: 1.2,
+  USDKRW: 100,
 }
 
 export function pipSize(pair: Pair): number {
-  return pair.endsWith('JPY') ? 0.01 : 0.0001
+  return pair.endsWith('JPY') || pair.endsWith('KRW') ? 0.01 : 0.0001
 }
 
 export function quote(pair: Pair, mid: number): { bid: number; ask: number } {

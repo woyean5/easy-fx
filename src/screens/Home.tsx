@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { SCENARIOS, type Scenario } from '../scenarios/catalog'
+import { useEffect, useState } from 'react'
+import { HISTORIC_SCENARIOS, RECENT_SCENARIOS, type Scenario } from '../scenarios/catalog'
+import { loadAvailable } from '../scenarios/recent'
 import { bestReturn, getNickname, getRecords, isGuideDone } from '../storage/storage'
 import { LeveragePicker } from '../components/LeveragePicker'
 import { PAIR_LABEL, fmtPct } from './types'
@@ -16,6 +17,8 @@ export function Home({ onStart, onOpenGuide, onEditNickname }: Props) {
   const records = getRecords()
   const stopOuts = records.filter(r => r.stoppedOut).length
   const guideDone = isGuideDone()
+  const [available, setAvailable] = useState<Set<string>>(new Set())
+  useEffect(() => { loadAvailable().then(setAvailable) }, [])
 
   return (
     <div className="screen tabbed">
@@ -35,23 +38,18 @@ export function Home({ onStart, onOpenGuide, onEditNickname }: Props) {
       )}
 
       <section>
-        <h2 className="section-title">시나리오</h2>
+        <h2 className="section-title">최근 한 달</h2>
         <div className="watchlist">
-          {SCENARIOS.map(s => {
-            const best = bestReturn(s.id)
-            return (
-              <button key={s.id} className="watch-row" onClick={() => setPicking(s)}>
-                <div className="watch-name">
-                  <b>{s.title}</b>
-                  <span>{PAIR_LABEL[s.pair]} · {s.from.slice(0, 7).replace('-', '.')} · {s.teaser}</span>
-                </div>
-                <div className="watch-right">
-                  <span className={`pill num ${best === null ? '' : best >= 0 ? 'up' : 'down'}`}>{best === null ? '도전' : fmtPct(best)}</span>
-                </div>
-              </button>
-            )
-          })}
+          {RECENT_SCENARIOS.map(s => <ScenarioRow key={s.id} s={s} ready onPick={setPicking} />)}
         </div>
+      </section>
+
+      <section>
+        <h2 className="section-title">역사 속 사건</h2>
+        <div className="watchlist">
+          {HISTORIC_SCENARIOS.map(s => <ScenarioRow key={s.id} s={s} ready={available.has(s.id)} onPick={setPicking} />)}
+        </div>
+        {HISTORIC_SCENARIOS.some(s => !available.has(s.id)) && <p className="footnote">"준비 중"인 시나리오는 과거 데이터를 넣는 대로 열려요.</p>}
       </section>
 
       <div className="stats">
@@ -70,5 +68,21 @@ export function Home({ onStart, onOpenGuide, onEditNickname }: Props) {
         />
       )}
     </div>
+  )
+}
+
+function ScenarioRow({ s, ready, onPick }: { s: Scenario; ready: boolean; onPick: (s: Scenario) => void }) {
+  const best = bestReturn(s.id)
+  const sub = s.kind === 'recent' ? `${PAIR_LABEL[s.pair]} · ${s.teaser}` : `${PAIR_LABEL[s.pair]} · ${s.from.slice(0, 7).replace('-', '.')} · ${s.teaser}`
+  return (
+    <button className={`watch-row ${ready ? '' : 'disabled'}`} disabled={!ready} onClick={() => onPick(s)}>
+      <div className="watch-name">
+        <b>{s.title}</b>
+        <span>{sub}</span>
+      </div>
+      <div className="watch-right">
+        <span className={`pill num ${!ready || best === null ? '' : best >= 0 ? 'up' : 'down'}`}>{!ready ? '준비 중' : best === null ? '도전' : fmtPct(best)}</span>
+      </div>
+    </button>
   )
 }

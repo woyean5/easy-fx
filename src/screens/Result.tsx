@@ -4,6 +4,7 @@ import { StopOutEffect } from '../components/StopOutEffect'
 import { lowerLeverage } from '../components/stopOut'
 import { START_BALANCE } from '../engine/engine'
 import { fmtPct, fmtUsd, PAIR_LABEL, type RoundResult } from './types'
+import { summarize } from '../scenarios/recent'
 
 interface Props {
   result: RoundResult
@@ -28,8 +29,8 @@ export function Result({ result, onRetry, onHome }: Props) {
       </div>
       <PriceChart series={series} upTo={series.p.length - 1} trades={trades} height={180} />
       <div className="story">
-        <b style={{ display: 'block', marginBottom: 8 }}>그때 실제로 무슨 일이 있었나</b>
-        {scenario.story.map((s, i) => <p key={i}>{s}</p>)}
+        <b style={{ display: 'block', marginBottom: 8 }}>{scenario.kind === 'recent' ? '이 기간 실제 시세는' : '그때 실제로 무슨 일이 있었나'}</b>
+        {(scenario.kind === 'recent' ? summarize(scenario.pair, series) : scenario.story).map((s, i) => <p key={i}>{s}</p>)}
       </div>
       <div className="actions">
         <button className="btn" onClick={onHome}>홈</button>

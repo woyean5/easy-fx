@@ -1,3 +1,7 @@
+import { SCENARIOS } from './catalog'
+import { fetchCandles, type LivePair } from '../live/quotes'
+import { candlesToSeries } from './recent'
+
 export interface PriceSeries {
   id: string
   /** unix 초 */
@@ -15,6 +19,8 @@ export function validateSeries(s: unknown): PriceSeries {
 }
 
 export async function loadSeries(id: string): Promise<PriceSeries> {
+  const sc = SCENARIOS.find(x => x.id === id)
+  if (sc?.kind === 'recent') return validateSeries(candlesToSeries(id, await fetchCandles(sc.pair as LivePair, 60)))
   const res = await fetch(`${import.meta.env.BASE_URL}scenarios/${id}.json`)
   if (!res.ok) throw new Error(`scenario ${id}: ${res.status}`)
   return validateSeries(await res.json())

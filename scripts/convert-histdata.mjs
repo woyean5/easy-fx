@@ -28,6 +28,7 @@ for (const f of readdirSync(dir).filter(f => f.toLowerCase().endsWith('.csv'))) 
 }
 
 mkdirSync('public/scenarios', { recursive: true })
+const done = []
 for (const s of SCENARIOS) {
   const m = rows[s.pair]
   const start = Date.parse(s.from + 'T00:00:00Z') / 1000
@@ -40,5 +41,9 @@ for (const s of SCENARIOS) {
   const t = [...buckets.keys()], p = [...buckets.values()]
   if (t.length < 500) { console.error(`✗ ${s.id}: ${t.length} points — ${s.pair} ${s.from}~${s.to} CSV가 부족해요`); process.exitCode = 1; continue }
   writeFileSync(`public/scenarios/${s.id}.json`, JSON.stringify({ id: s.id, t, p }))
+  done.push(s.id)
   console.log(`✓ ${s.id}: ${t.length} points, ${p[0]} → ${p[p.length - 1]}`)
 }
+// 앱이 '준비 중' 여부를 판단하는 목록
+writeFileSync('public/scenarios/index.json', JSON.stringify({ ids: done }))
+console.log(`index.json: ${done.length}개 시나리오`)

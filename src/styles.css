@@ -191,3 +191,4 @@ input.text { width: 100%; height: 48px; border-radius: 12px; border: 1px solid v
 .onb-actions { display: flex; flex-direction: column; gap: 10px; }
 @keyframes fadein { from { opacity: 0; transform: translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { .onb-body { animation: none; } }
+.watch-row.disabled { opacity: .45; cursor: default; }

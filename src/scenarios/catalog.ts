@@ -2,6 +2,8 @@ import type { Pair } from '../engine/types'
 
 export interface Scenario {
   id: string
+  /** historic: 과거 사건(파일 데이터), recent: 최근 30일(Kraken 1시간봉, 실행 시 받아옴) */
+  kind: 'historic' | 'recent'
   title: string
   pair: Pair
   from: string
@@ -10,9 +12,23 @@ export interface Scenario {
   story: string[]
 }
 
-export const SCENARIOS: Scenario[] = [
+const recent = (pair: 'EURUSD' | 'GBPUSD' | 'AUDUSD', name: string): Scenario => ({
+  id: `recent-${pair.toLowerCase()}`,
+  kind: 'recent',
+  title: `최근 한 달 ${name}`,
+  pair,
+  from: '',
+  to: '',
+  teaser: '지난 30일 실제 시세 · 1시간 단위',
+  story: [],
+})
+
+export const RECENT_SCENARIOS: Scenario[] = [recent('EURUSD', '유로/달러'), recent('GBPUSD', '파운드/달러'), recent('AUDUSD', '호주달러/달러')]
+
+export const HISTORIC_SCENARIOS: Scenario[] = [
   {
     id: 'yen-crash-2022',
+    kind: 'historic',
     title: '엔화 대폭락',
     pair: 'USDJPY',
     from: '2022-09-01',
@@ -27,6 +43,7 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: 'covid-dollar-2020',
+    kind: 'historic',
     title: '코로나 달러 쇼크',
     pair: 'EURUSD',
     from: '2020-03-01',
@@ -41,6 +58,7 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: 'brexit-2016',
+    kind: 'historic',
     title: '브렉시트의 밤',
     pair: 'GBPUSD',
     from: '2016-06-15',
@@ -55,6 +73,7 @@ export const SCENARIOS: Scenario[] = [
   },
   {
     id: 'carry-unwind-2024',
+    kind: 'historic',
     title: '엔캐리 청산',
     pair: 'USDJPY',
     from: '2024-07-15',
@@ -68,3 +87,5 @@ export const SCENARIOS: Scenario[] = [
     ],
   },
 ]
+
+export const SCENARIOS: Scenario[] = [...RECENT_SCENARIOS, ...HISTORIC_SCENARIOS]

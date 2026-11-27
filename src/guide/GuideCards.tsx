@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { GUIDE_CARDS } from './glossary'
+import { GUIDE_ART } from './illustrations'
 import { setGuideDone } from '../storage/storage'
 
 export function GuideCards({ onClose }: { onClose: () => void }) {
   const [i, setI] = useState(0)
   const last = i === GUIDE_CARDS.length - 1
   const card = GUIDE_CARDS[i]
+  const Art = GUIDE_ART[i]
   return (
     <div className="guide">
       <div className="trade-head">
@@ -13,6 +15,7 @@ export function GuideCards({ onClose }: { onClose: () => void }) {
         <div className="dots">{GUIDE_CARDS.map((_, k) => <i key={k} className={k === i ? 'on' : ''} />)}</div>
         <span style={{ width: 32 }} />
       </div>
+      <Art />
       <h2>{card.title}</h2>
       <p>{card.body}</p>
       <div className="actions">

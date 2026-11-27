@@ -192,3 +192,6 @@ input.text { width: 100%; height: 48px; border-radius: 12px; border: 1px solid v
 @keyframes fadein { from { opacity: 0; transform: translateY(8px); } }
 @media (prefers-reduced-motion: reduce) { .onb-body { animation: none; } }
 .watch-row.disabled { opacity: .45; cursor: default; }
+.guide-art { width: 100%; height: auto; display: block; margin-top: 20px; font-family: inherit; }
+.guide h2 { margin-top: 20px; }
+.guide { overflow-y: auto; }

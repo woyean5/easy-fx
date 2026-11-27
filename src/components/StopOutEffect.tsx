@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { START_BALANCE } from '../engine/engine'
-import { fmtUsd } from '../screens/types'
+import { fmtWon } from '../screens/types'
 import { lowerLeverage, stopOutMessage } from './stopOut'
 
 interface Props {
@@ -33,7 +33,7 @@ export function StopOutEffect({ leverage, finalBalance, onRetryLower, onClose }:
     <div className={`stopout ${reduced ? '' : 'anim'}`} role="alertdialog" aria-label="강제청산">
       <div className="flash" />
       <h1>강제청산 (Margin Call)</h1>
-      <div className="num down">{fmtUsd(shown)}</div>
+      <div className="num down">{fmtWon(shown)}</div>
       <p>{stopOutMessage(leverage)}</p>
       {lower < leverage && <button className="btn primary" onClick={onRetryLower}>{lower}배로 다시 하기</button>}
       <button className="btn" onClick={onClose}>결과 보기</button>

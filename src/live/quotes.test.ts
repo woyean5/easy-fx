@@ -5,6 +5,7 @@ const ticker = { error: [], result: {
   ZEURZUSD: { a: ['1.09764', '1', '1'], b: ['1.09760', '1', '1'] },
   ZGBPZUSD: { a: ['1.31081', '1', '1'], b: ['1.31075', '1', '1'] },
   AUDUSD: { a: ['0.66346', '1', '1'], b: ['0.66340', '1', '1'] },
+  ZUSDZCAD: { a: ['1.42599', '1', '1'], b: ['1.42557', '1', '1'] },
   ZUSDZJPY: { a: ['161.799', '1', '1'], b: ['156.503', '1', '1'] },
 } }
 
@@ -13,6 +14,7 @@ test('kraken ticker → mids for liquid pairs only (JPY ignored)', () => {
   expect(m.EURUSD).toBeCloseTo(1.09762, 6)
   expect(m.GBPUSD).toBeCloseTo(1.31078, 6)
   expect(m.AUDUSD).toBeCloseTo(0.66343, 6)
+  expect(m.USDCAD).toBeCloseTo(1.42578, 6)
   expect(m.USDJPY).toBeUndefined()
 })
 

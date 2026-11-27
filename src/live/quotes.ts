@@ -1,7 +1,7 @@
-export type LivePair = 'EURUSD' | 'GBPUSD' | 'AUDUSD' | 'USDJPY' | 'USDKRW'
+export type LivePair = 'EURUSD' | 'GBPUSD' | 'AUDUSD' | 'USDCAD' | 'USDJPY' | 'USDKRW'
 export type Mids = Partial<Record<LivePair, number>>
 
-export const LIVE_PAIRS: LivePair[] = ['USDKRW', 'USDJPY', 'EURUSD', 'GBPUSD', 'AUDUSD']
+export const LIVE_PAIRS: LivePair[] = ['USDKRW', 'USDJPY', 'EURUSD', 'GBPUSD', 'AUDUSD', 'USDCAD']
 
 export const PAIR_NAME_KO: Record<LivePair, string> = {
   USDKRW: '달러/원',
@@ -9,11 +9,12 @@ export const PAIR_NAME_KO: Record<LivePair, string> = {
   EURUSD: '유로/달러',
   GBPUSD: '파운드/달러',
   AUDUSD: '호주달러/달러',
+  USDCAD: '달러/캐나다달러',
 }
 
 /** Kraken에서 거래가 충분한 통화쌍만. USD/JPY는 체결이 적어 가격이 어긋나므로 제외 */
-const KRAKEN_KEYS: Record<string, LivePair> = { ZEURZUSD: 'EURUSD', ZGBPZUSD: 'GBPUSD', AUDUSD: 'AUDUSD' }
-export const KRAKEN_PAIRS: LivePair[] = ['EURUSD', 'GBPUSD', 'AUDUSD']
+const KRAKEN_KEYS: Record<string, LivePair> = { ZEURZUSD: 'EURUSD', ZGBPZUSD: 'GBPUSD', AUDUSD: 'AUDUSD', ZUSDZCAD: 'USDCAD' }
+export const KRAKEN_PAIRS: LivePair[] = ['EURUSD', 'GBPUSD', 'AUDUSD', 'USDCAD']
 export const hasHistory = (p: LivePair) => KRAKEN_PAIRS.includes(p)
 
 export interface Candle { t: number; o: number; h: number; l: number; c: number }
@@ -56,7 +57,7 @@ export function isStale(lastT: number, now: number): boolean {
 }
 
 export async function fetchKraken(): Promise<Mids> {
-  const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=EURUSD,GBPUSD,AUDUSD')
+  const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=EURUSD,GBPUSD,AUDUSD,USDCAD')
   return parseKrakenTicker(await r.json())
 }
 

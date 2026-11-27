@@ -12,7 +12,7 @@ export interface Scenario {
   story: string[]
 }
 
-const recent = (pair: 'EURUSD' | 'GBPUSD' | 'AUDUSD', name: string): Scenario => ({
+const recent = (pair: 'EURUSD' | 'GBPUSD' | 'AUDUSD' | 'USDCAD', name: string): Scenario => ({
   id: `recent-${pair.toLowerCase()}`,
   kind: 'recent',
   title: `최근 한 달 ${name}`,
@@ -23,7 +23,7 @@ const recent = (pair: 'EURUSD' | 'GBPUSD' | 'AUDUSD', name: string): Scenario =>
   story: [],
 })
 
-export const RECENT_SCENARIOS: Scenario[] = [recent('EURUSD', '유로/달러'), recent('GBPUSD', '파운드/달러'), recent('AUDUSD', '호주달러/달러')]
+export const RECENT_SCENARIOS: Scenario[] = [recent('EURUSD', '유로/달러'), recent('GBPUSD', '파운드/달러'), recent('AUDUSD', '호주달러/달러'), recent('USDCAD', '달러/캐나다달러')]
 
 export const HISTORIC_SCENARIOS: Scenario[] = [
   {

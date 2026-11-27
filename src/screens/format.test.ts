@@ -1,11 +1,14 @@
 import { expect, test } from 'vitest'
-import { fmtPct, fmtUsd, trendClass } from './types'
+import { fmtPct, fmtWon, trendClass } from './types'
 
-test('money and percent formatting near zero', () => {
-  expect(fmtUsd(-0.13)).toBe('-$0.13')
-  expect(fmtUsd(-0.001)).toBe('$0.00')
-  expect(fmtUsd(10240)).toBe('$10,240')
-  expect(fmtUsd(-6143.4)).toBe('-$6,143')
+test('won formatting', () => {
+  expect(fmtWon(10_000_000)).toBe('10,000,000원')
+  expect(fmtWon(-1234.6)).toBe('-1,235원')
+  expect(fmtWon(-0.4)).toBe('0원')
+  expect(fmtWon(0)).toBe('0원')
+})
+
+test('percent formatting near zero', () => {
   expect(fmtPct(-0.001)).toBe('0.00%')
   expect(fmtPct(12.434)).toBe('+12.43%')
   expect(trendClass(-0.001)).toBe('flat')

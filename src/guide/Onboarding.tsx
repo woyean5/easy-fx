@@ -8,7 +8,7 @@ const SLIDES: { icon: string; color: string; title: string; body: string }[] = [
     icon: 'M3 17l5-6 4 4 8-9M15 6h5v5',
     color: 'var(--up)',
     title: 'Easy FX에 오신 걸 환영해요',
-    body: '가상의 $10,000로 진짜 환율에 투자해 보는 FX 모의투자 앱이에요. 실제 돈은 한 푼도 쓰지 않아요.',
+    body: '가상의 1,000만 원으로 진짜 환율에 투자해 보는 FX 모의투자 앱이에요. 실제 돈은 한 푼도 쓰지 않아요.',
   },
   {
     icon: 'M4 6h16M4 12h16M4 18h10',

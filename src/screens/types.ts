@@ -18,14 +18,16 @@ export type Route =
   | { name: 'trade'; scenario: Scenario; leverage: number }
   | { name: 'result'; result: RoundResult }
 
-export const PAIR_LABEL: Record<string, string> = { USDJPY: 'USD/JPY', EURUSD: 'EUR/USD', AUDUSD: 'AUD/USD', GBPUSD: 'GBP/USD', USDKRW: 'USD/KRW' }
+export const PAIR_LABEL: Record<string, string> = { USDJPY: 'USD/JPY', EURUSD: 'EUR/USD', AUDUSD: 'AUD/USD', GBPUSD: 'GBP/USD', USDKRW: 'USD/KRW', USDCAD: 'USD/CAD' }
 
 export const fmtPrice = (pair: string, p: number) => p.toFixed(pair.endsWith('KRW') ? 2 : pair.endsWith('JPY') ? 3 : 5)
-export const fmtUsd = (n: number) => {
-  const a = Math.abs(n), digits = a < 100 && a > 0 ? 2 : 0
-  const txt = a.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits })
-  return (n < 0 && Number(txt.replace(/,/g, '')) !== 0 ? '-$' : '$') + txt
+/** 원화 금액: 10,000,000원 */
+export const fmtWon = (n: number) => {
+  const r = Math.round(n)
+  return (r < 0 ? '-' : '') + Math.abs(r).toLocaleString('ko-KR') + '원'
 }
+/** 달러 금액 (거래 규모 안내용): $1,234 */
+export const fmtUsd = (n: number) => '$' + Math.round(n).toLocaleString('en-US')
 export const fmtPct = (n: number) => {
   const r = Number(n.toFixed(2))
   return (r > 0 ? '+' : '') + (r === 0 ? '0.00' : r.toFixed(2)) + '%'

@@ -5,7 +5,7 @@ import type { LiveApi } from '../live/useLive'
 import { Sparkline } from '../components/Sparkline'
 import { InfoButton } from '../guide/InfoButton'
 import { isGuideDone } from '../storage/storage'
-import { fmtPct, fmtPrice, fmtUsd, PAIR_LABEL } from './types'
+import { fmtPct, fmtPrice, fmtWon, PAIR_LABEL } from './types'
 
 export function LiveHome({ live, onOpen, onOpenGuide }: { live: LiveApi; onOpen: (p: LivePair) => void; onOpenGuide: () => void }) {
   const { acc, mids, offline } = live
@@ -34,11 +34,11 @@ export function LiveHome({ live, onOpen, onOpenGuide }: { live: LiveApi; onOpen:
       <section className="card account">
         <div className="muted small">실시간 계좌 자산</div>
         <div className="account-row">
-          <b className="num account-eq">{fmtUsd(eq)}</b>
+          <b className="num account-eq">{fmtWon(eq)}</b>
           <span className={`pill num ${Math.abs(ret) < 0.005 ? 'flat' : ret > 0 ? 'up' : 'down'}`}>{fmtPct(ret)}</span>
         </div>
         <div className="account-sub small muted num">
-          <span>사용 증거금 {fmtUsd(usedMargin(acc))}</span>
+          <span>사용 증거금 {fmtWon(usedMargin(acc))}</span>
           <span>유지율 {level === null ? '—' : `${Math.round(level)}%`} <InfoButton term="marginLevel" /></span>
         </div>
       </section>
@@ -54,9 +54,9 @@ export function LiveHome({ live, onOpen, onOpenGuide }: { live: LiveApi; onOpen:
                 <button key={p} className="cell" onClick={() => onOpen(p)}>
                   <div className="cell-main">
                     <b>{PAIR_LABEL[p]}</b>
-                    <span className="muted small">{pos.side === 'buy' ? '매수' : '매도'} · {pos.leverage}배 · 증거금 {fmtUsd(pos.margin)}</span>
+                    <span className="muted small">{pos.side === 'buy' ? '매수' : '매도'} · {pos.leverage}배 · 증거금 {fmtWon(pos.margin)}</span>
                   </div>
-                  <b className={`num ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmtUsd(pnl)}</b>
+                  <b className={`num ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmtWon(pnl)}</b>
                 </button>
               )
             })}

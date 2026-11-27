@@ -7,7 +7,7 @@ import type { LiveApi } from '../live/useLive'
 import { getTicks, isGuideDone } from '../storage/storage'
 import { InfoButton } from '../guide/InfoButton'
 import { isTooSoon } from './tapGuard'
-import { fmtPct, fmtPrice, fmtUsd, PAIR_LABEL } from './types'
+import { fmtPct, fmtPrice, fmtUsd, fmtWon, PAIR_LABEL } from './types'
 
 type Range = '1D' | '1W' | '1M'
 const RANGES: { id: Range; label: string; interval: number; seconds: number }[] = [
@@ -58,7 +58,7 @@ export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
   const chg = shown && first ? ((shown.p - first) / first) * 100 : null
   const free = Math.max(0, freeMargin(acc, mids))
   const margin = Math.floor((free * pct) / 100)
-  const blocked = info.stale || info.down || mid === undefined
+  const blocked = info.stale || info.down || mid === undefined || mids.USDKRW === undefined
 
   const tap = () => {
     if (isTooSoon(lastAction.current, performance.now())) return false
@@ -112,9 +112,9 @@ export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
           <div className="cell static">
             <div className="cell-main">
               <b>{pos.side === 'buy' ? '매수' : '매도'} {pos.leverage}배</b>
-              <span className="muted small num">진입 {fmtPrice(pair, pos.entry)} · 증거금 {fmtUsd(pos.margin)}</span>
+              <span className="muted small num">진입 {fmtPrice(pair, pos.entry)} · 증거금 {fmtWon(pos.margin)}</span>
             </div>
-            <b className={`num ${pnl >= 0 ? 'up' : 'down'}`} style={{ fontSize: 20 }}>{pnl >= 0 ? '+' : ''}{fmtUsd(pnl)}</b>
+            <b className={`num ${pnl >= 0 ? 'up' : 'down'}`} style={{ fontSize: 20 }}>{pnl >= 0 ? '+' : ''}{fmtWon(pnl)}</b>
           </div>
           <button className="btn primary wide" style={{ marginTop: 12 }} disabled={mid === undefined} onClick={() => { if (tap()) live.closePos(pair) }}>청산하기</button>
         </div>
@@ -135,9 +135,10 @@ export function LiveDetail({ pair, live, onClose, onOpenGuide }: Props) {
             </div>
           </div>
           <div className="slider">
-            <div className="meta small"><span className="muted">증거금 <InfoButton term="margin" /></span><span className="num">{fmtUsd(margin)} → 거래 {fmtUsd(margin * lev)}</span></div>
+            <div className="meta small"><span className="muted">증거금 <InfoButton term="margin" /></span><span className="num">{fmtWon(margin)} → 거래 {fmtWon(margin * lev)}</span></div>
+            {mids.USDKRW !== undefined && <div className="muted small num">달러로 약 {fmtUsd((margin * lev) / mids.USDKRW)}어치 거래 · 1달러 = {Math.round(mids.USDKRW).toLocaleString('ko-KR')}원</div>}
             <input type="range" min={10} max={100} step={10} value={pct} onChange={e => setPct(Number(e.target.value))} aria-label="증거금 비율" />
-            <div className="muted small num">여유 증거금 {fmtUsd(free)}</div>
+            <div className="muted small num">여유 증거금 {fmtWon(free)}</div>
           </div>
           {msg && <div className="banner">{msg}</div>}
           <div className="actions">

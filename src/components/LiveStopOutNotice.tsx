@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import type { StopOutNotice } from '../live/useLive'
-import { fmtUsd } from '../screens/types'
+import { fmtWon } from '../screens/types'
 import { stopOutMessage } from './stopOut'
 
 export function LiveStopOutNotice({ notice, onClose }: { notice: StopOutNotice; onClose: () => void }) {
@@ -12,7 +12,7 @@ export function LiveStopOutNotice({ notice, onClose }: { notice: StopOutNotice; 
     <div className={`stopout ${reduced ? '' : 'anim'}`} role="alertdialog" aria-label="강제청산">
       <div className="flash" />
       <h1>강제청산 (Margin Call)</h1>
-      <div className="num down">{fmtUsd(loss)}</div>
+      <div className="num down">{fmtWon(loss)}</div>
       <p>
         {notice.offline
           ? `앱을 닫아둔 동안 ${new Date(notice.at * 1000).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}에 증거금 유지율이 50% 아래로 떨어져 모든 포지션이 정리됐어요.`

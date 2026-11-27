@@ -11,7 +11,7 @@ test('live account round-trips; resetLive clears account and history but keeps s
   s.addLiveTrades([{ pair: 'EURUSD', side: 'buy', leverage: 3, margin: 100, pnl: 5, openedAt: 1, closedAt: 2, reason: 'manual' }])
   s.addRecord({ scenarioId: 'brexit-2016', leverage: 1, returnPct: 1, stoppedOut: false, at: 1 })
   s.resetLive(10)
-  expect(s.getLive(11).balance).toBe(10000)
+  expect(s.getLive(11).balance).toBe(10_000_000)
   expect(s.getLive(11).lastSeen).toBe(10)
   expect(s.getLiveHistory()).toEqual([])
   expect(s.getRecords()).toHaveLength(1)
@@ -33,4 +33,10 @@ test('corrupted live data falls back to a fresh account', () => {
   expect(s.getLive(7)).toEqual(newLiveAccount(7))
   localStorage.setItem('easyfx:live', '{"balance":"x"}')
   expect(s.getLive(7)).toEqual(newLiveAccount(7))
+})
+
+test('an old dollar-based live account is replaced by a won account', () => {
+  localStorage.setItem('easyfx:live', JSON.stringify({ balance: 10000, positions: {}, lastSeen: 1 }))
+  expect(s.getLive(7)).toEqual(newLiveAccount(7))
+  expect(s.getLive(7).balance).toBe(10_000_000)
 })

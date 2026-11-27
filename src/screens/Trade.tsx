@@ -3,13 +3,14 @@ import type { Scenario } from '../scenarios/catalog'
 import { loadSeries, type PriceSeries } from '../scenarios/load'
 import { useReplay } from '../replay/useReplay'
 import { ROUND_SECONDS } from '../replay/replay'
-import { close, equity, marginLevel, open, shouldStopOut, START_BALANCE, unrealizedPnl } from '../engine/engine'
+import { close, equity, FALLBACK_KRW, marginLevel, open, shouldStopOut, START_BALANCE, unrealizedPnl } from '../engine/engine'
+import { fetchCoinbase } from '../live/quotes'
 import type { Account, Side } from '../engine/types'
 import { getRecords } from '../storage/storage'
 import { PriceChart } from '../components/PriceChart'
 import { InfoButton } from '../guide/InfoButton'
 import { isTooSoon } from './tapGuard'
-import { PAIR_LABEL, fmtPct, fmtPrice, fmtUsd, type RoundResult, type Trade } from './types'
+import { PAIR_LABEL, fmtPct, fmtPrice, fmtUsd, fmtWon, type RoundResult, type Trade } from './types'
 
 interface Props {
   scenario: Scenario
@@ -20,10 +21,13 @@ interface Props {
 
 export function TradeScreen({ scenario, leverage, onFinish, onQuit }: Props) {
   const [series, setSeries] = useState<PriceSeries | null>(null)
+  // 판 시작 시점의 원/달러로 고정 (받지 못하면 기본값)
+  const [krw, setKrw] = useState<number | null>(null)
   const [error, setError] = useState(false)
 
   useEffect(() => {
     loadSeries(scenario.id).then(setSeries).catch(() => setError(true))
+    fetchCoinbase().then(m => setKrw(m.USDKRW ?? FALLBACK_KRW)).catch(() => setKrw(FALLBACK_KRW))
   }, [scenario.id])
 
   if (error) {
@@ -34,11 +38,11 @@ export function TradeScreen({ scenario, leverage, onFinish, onQuit }: Props) {
       </div>
     )
   }
-  if (!series) return <div className="screen"><p className="muted">불러오는 중…</p></div>
-  return <Round scenario={scenario} leverage={leverage} series={series} onFinish={onFinish} onQuit={onQuit} />
+  if (!series || krw === null) return <div className="screen"><p className="muted">불러오는 중…</p></div>
+  return <Round scenario={scenario} leverage={leverage} series={series} krw={krw} onFinish={onFinish} onQuit={onQuit} />
 }
 
-function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { series: PriceSeries }) {
+function Round({ scenario, leverage, series, krw, onFinish, onQuit }: Props & { series: PriceSeries; krw: number }) {
   const { pair } = scenario
   const { index, mid, elapsedMs, done, paused, pause, resume } = useReplay(series)
   const [acc, setAcc] = useState<Account>({ balance: START_BALANCE, position: null })
@@ -51,7 +55,7 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
   const finish = (stoppedOut: boolean) => {
     if (finished.current) return
     finished.current = true
-    const final = close(acc, pair, mid)
+    const final = close(acc, pair, mid, krw)
     const allTrades = acc.position ? [...trades, { index, side: 'close' as const }] : trades
     onFinish({
       scenario,
@@ -70,13 +74,13 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
 
   useEffect(() => {
     if (finished.current) return
-    if (shouldStopOut(acc, pair, mid)) finish(true)
+    if (shouldStopOut(acc, pair, mid, krw)) finish(true)
     else if (done) finish(false)
   })
 
   const go = (side: Side) => {
     if (isTooSoon(lastAction.current, performance.now())) return
-    const next = open(acc, pair, side, Math.floor((acc.balance * pct) / 100), leverage, mid)
+    const next = open(acc, pair, side, Math.floor((acc.balance * pct) / 100), leverage, mid, krw)
     if (next === acc) return
     lastAction.current = performance.now()
     setAcc(next)
@@ -85,7 +89,7 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
   const exit = () => {
     if (!acc.position || isTooSoon(lastAction.current, performance.now())) return
     lastAction.current = performance.now()
-    setAcc(close(acc, pair, mid))
+    setAcc(close(acc, pair, mid, krw))
     setTrades(t => [...t, { index, side: 'close' }])
   }
   const quit = () => {
@@ -95,9 +99,9 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
   }
 
   const change = ((mid - series.p[0]) / series.p[0]) * 100
-  const eq = equity(acc, pair, mid)
-  const level = marginLevel(acc, pair, mid)
-  const pnl = acc.position ? unrealizedPnl(pair, acc.position, mid) : 0
+  const eq = equity(acc, pair, mid, krw)
+  const level = marginLevel(acc, pair, mid, krw)
+  const pnl = acc.position ? unrealizedPnl(pair, acc.position, mid, krw) : 0
   const remain = Math.max(0, ROUND_SECONDS - elapsedMs / 1000)
   const date = new Date(series.t[index] * 1000)
   const margin = Math.floor((acc.balance * pct) / 100)
@@ -122,7 +126,7 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
       <div className="progress"><div style={{ width: `${(elapsedMs / (ROUND_SECONDS * 1000)) * 100}%` }} /></div>
 
       <div className="meta">
-        <div className="meta-col"><span>자산</span><b className="num">{fmtUsd(eq)}</b></div>
+        <div className="meta-col"><span>자산</span><b className="num">{fmtWon(eq)}</b></div>
         <div className="meta-col" style={{ textAlign: 'center' }}>
           <span>증거금 유지율 <InfoButton term="marginLevel" /></span>
           <b className={`num ${level !== null && level < 100 ? 'down' : ''}`}>{level === null ? '—' : `${Math.round(level)}%`}</b>
@@ -133,14 +137,15 @@ function Round({ scenario, leverage, series, onFinish, onQuit }: Props & { serie
       {acc.position ? (
         <div className="pos">
           <div>
-            <div className="muted small">{acc.position.side === 'buy' ? '매수' : '매도'} · 증거금 {fmtUsd(acc.position.margin)} <InfoButton term="margin" /></div>
-            <b className={`num ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmtUsd(pnl)}</b>
+            <div className="muted small">{acc.position.side === 'buy' ? '매수' : '매도'} · 증거금 {fmtWon(acc.position.margin)} <InfoButton term="margin" /></div>
+            <b className={`num ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmtWon(pnl)}</b>
           </div>
           <div className="muted small num">진입 {fmtPrice(pair, acc.position.entry)}</div>
         </div>
       ) : (
         <div className="slider">
-          <div className="meta small"><span className="muted">증거금 <InfoButton term="margin" /></span><span className="num">{fmtUsd(margin)} → 거래 {fmtUsd(margin * leverage)}</span></div>
+          <div className="meta small"><span className="muted">증거금 <InfoButton term="margin" /></span><span className="num">{fmtWon(margin)} → 거래 {fmtWon(margin * leverage)}</span></div>
+          <div className="muted small num">달러로 약 {fmtUsd((margin * leverage) / krw)}어치 거래 · 1달러 = {Math.round(krw).toLocaleString('ko-KR')}원</div>
           <input type="range" min={10} max={100} step={10} value={pct} onChange={e => setPct(Number(e.target.value))} aria-label="증거금 비율" />
         </div>
       )}

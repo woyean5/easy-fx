@@ -3,7 +3,7 @@ import { liveEquity } from '../live/account'
 import type { LiveApi } from '../live/useLive'
 import { SCENARIOS } from '../scenarios/catalog'
 import { getLiveHistory, getRecords } from '../storage/storage'
-import { fmtPct, fmtUsd, PAIR_LABEL, trendClass } from './types'
+import { fmtPct, fmtWon, PAIR_LABEL, trendClass } from './types'
 
 const when = (sec: number) => new Date(sec * 1000).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
@@ -14,7 +14,7 @@ export function History({ live }: { live: LiveApi }) {
   const wins = trades.filter(t => t.pnl > 0).length
 
   const reset = () => {
-    if (confirm('실시간 계좌를 $10,000로 초기화할까요? 실시간 거래 기록도 모두 지워져요.')) live.reset()
+    if (confirm('실시간 계좌를 1,000만 원으로 초기화할까요? 실시간 거래 기록도 모두 지워져요.')) live.reset()
   }
 
   return (
@@ -24,7 +24,7 @@ export function History({ live }: { live: LiveApi }) {
       <section className="card account">
         <div className="muted small">실시간 계좌</div>
         <div className="account-row">
-          <b className="num account-eq">{fmtUsd(eq)}</b>
+          <b className="num account-eq">{fmtWon(eq)}</b>
           <span className={`pill num ${trendClass(((eq - START_BALANCE) / START_BALANCE) * 100)}`}>{fmtPct(((eq - START_BALANCE) / START_BALANCE) * 100)}</span>
         </div>
         <div className="account-sub small muted num">
@@ -42,9 +42,9 @@ export function History({ live }: { live: LiveApi }) {
               <div key={i} className="cell static">
                 <div className="cell-main">
                   <b>{PAIR_LABEL[t.pair]} {t.side === 'buy' ? '매수' : '매도'} {t.leverage}배{t.reason === 'stopout' && <span className="tag">강제청산</span>}</b>
-                  <span className="muted small">{when(t.closedAt)} · 증거금 {fmtUsd(t.margin)}</span>
+                  <span className="muted small">{when(t.closedAt)} · 증거금 {fmtWon(t.margin)}</span>
                 </div>
-                <b className={`num ${t.pnl >= 0 ? 'up' : 'down'}`}>{t.pnl >= 0 ? '+' : ''}{fmtUsd(t.pnl)}</b>
+                <b className={`num ${t.pnl >= 0 ? 'up' : 'down'}`}>{t.pnl >= 0 ? '+' : ''}{fmtWon(t.pnl)}</b>
               </div>
             ))}
           </div>

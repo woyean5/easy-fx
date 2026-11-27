@@ -171,7 +171,9 @@ export function useLive() {
     const mid = mids[pair]
     const a = accRef.current
     if (mid === undefined || !a.positions[pair]) return
-    const r = closeLive(a, pair, mid, nowSec(), 'manual')
+    const krw = mids.USDKRW
+    if (krw === undefined) return
+    const r = closeLive(a, pair, mid, krw, nowSec(), 'manual')
     commit(r.acc, r.trade ? [r.trade] : [])
   }
 

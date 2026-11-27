@@ -19,7 +19,7 @@ beforeEach(() => {
 
 test('offline stop-out on reopen is not undone by the live effect', async () => {
   const t0 = now() - 3 * 3600
-  storage.saveLive(openLive(newLiveAccount(t0), 'EURUSD', 'buy', 5000, 30, { EURUSD: 1.1 }, t0))
+  storage.saveLive(openLive(newLiveAccount(t0), 'EURUSD', 'buy', 5_000_000, 30, { EURUSD: 1.1, USDKRW: 1300 }, t0))
   const crashAt = Math.floor((t0 + 3600) / 900) * 900
   q.candles.mockImplementation(async (pair: string) => pair === 'EURUSD' ? [{ t: crashAt, o: 1.1, h: 1.1, l: 1.0, c: 1.1 }] : [])
   q.kraken.mockResolvedValue({ EURUSD: 1.1, GBPUSD: 1.3, AUDUSD: 0.66 }) // 가격은 회복됨
@@ -48,7 +48,7 @@ test('returning from background after days re-checks the gap', async () => {
   q.candles.mockResolvedValue([{ t: now() - 60, o: 1.1, h: 1.1, l: 1.1, c: 1.1 }])
   const { result } = renderHook(() => useLive())
   await waitFor(() => expect(result.current.mids.EURUSD).toBe(1.1))
-  await waitFor(() => expect(result.current.order('EURUSD', 'buy', 5000, 30)).toBe(true))
+  await waitFor(() => expect(result.current.order('EURUSD', 'buy', 5_000_000, 30)).toBe(true))
   const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
   act(() => { document.dispatchEvent(new Event('visibilitychange')) })
   const later = now() + 3 * 86400
@@ -65,7 +65,7 @@ test('a response that lands while hidden does not move lastSeen forward', async 
   q.kraken.mockResolvedValue({ EURUSD: 1.1, GBPUSD: 1.3, AUDUSD: 0.66 })
   q.candles.mockResolvedValue([{ t: now() - 60, o: 1.1, h: 1.1, l: 1.1, c: 1.1 }])
   const { result } = renderHook(() => useLive())
-  await waitFor(() => expect(result.current.order('EURUSD', 'buy', 5000, 30)).toBe(true))
+  await waitFor(() => expect(result.current.order('EURUSD', 'buy', 5_000_000, 30)).toBe(true))
   const seen = result.current.acc.lastSeen
   vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
   act(() => { document.dispatchEvent(new Event('visibilitychange')) })

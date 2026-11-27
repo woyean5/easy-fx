@@ -1,10 +1,13 @@
-import { open, START_BALANCE, STOP_OUT_LEVEL, unrealizedPnl } from '../engine/engine'
+import { FALLBACK_KRW, open, START_BALANCE, STOP_OUT_LEVEL, unrealizedPnl } from '../engine/engine'
 import type { Position, Side } from '../engine/types'
 import type { Candle, LivePair, Mids } from './quotes'
 
 export interface LivePosition extends Position { openedAt: number }
 
 export interface LiveAccount {
+  /** 계좌 통화. 예전 달러 계좌와 구분한다 */
+  currency: 'KRW'
+  /** 원 */
   balance: number
   positions: Partial<Record<LivePair, LivePosition>>
   /** 마지막으로 시세를 확인한 시각 (unix 초) */
@@ -25,17 +28,20 @@ export interface ClosedTrade {
 const entries = (acc: LiveAccount) => Object.entries(acc.positions) as [LivePair, LivePosition][]
 
 export function newLiveAccount(now: number): LiveAccount {
-  return { balance: START_BALANCE, positions: {}, lastSeen: now }
+  return { currency: 'KRW', balance: START_BALANCE, positions: {}, lastSeen: now }
 }
 
 export function usedMargin(acc: LiveAccount): number {
   return entries(acc).reduce((s, [, p]) => s + p.margin, 0)
 }
 
-/** 시세가 없는 통화쌍은 손익 0으로 본다 (진입가 그대로) */
+/** 1달러가 몇 원인지. 원/달러 시세가 아직 없으면 undefined */
+export const krwOf = (mids: Mids): number | undefined => mids.USDKRW
+
+/** 원화 손익. 시세나 원/달러가 없으면 0으로 본다 (진입가 그대로) */
 export function livePnl(pair: LivePair, pos: LivePosition, mids: Mids): number {
-  const mid = mids[pair]
-  return mid === undefined ? 0 : unrealizedPnl(pair, pos, mid)
+  const mid = mids[pair], krw = krwOf(mids)
+  return mid === undefined || krw === undefined ? 0 : unrealizedPnl(pair, pos, mid, krw)
 }
 
 export function liveEquity(acc: LiveAccount, mids: Mids): number {
@@ -57,17 +63,17 @@ export function liveShouldStopOut(acc: LiveAccount, mids: Mids): boolean {
 }
 
 export function openLive(acc: LiveAccount, pair: LivePair, side: Side, margin: number, leverage: number, mids: Mids, now: number): LiveAccount {
-  const mid = mids[pair]
-  if (mid === undefined || acc.positions[pair]) return acc
-  const opened = open({ balance: freeMargin(acc, mids), position: null }, pair, side, margin, leverage, mid)
+  const mid = mids[pair], krw = krwOf(mids)
+  if (mid === undefined || krw === undefined || acc.positions[pair]) return acc
+  const opened = open({ balance: freeMargin(acc, mids), position: null }, pair, side, margin, leverage, mid, krw)
   if (!opened.position) return acc
   return { ...acc, positions: { ...acc.positions, [pair]: { ...opened.position, openedAt: now } } }
 }
 
-export function closeLive(acc: LiveAccount, pair: LivePair, mid: number, now: number, reason: ClosedTrade['reason']): { acc: LiveAccount; trade: ClosedTrade | null } {
+export function closeLive(acc: LiveAccount, pair: LivePair, mid: number, krw: number, now: number, reason: ClosedTrade['reason']): { acc: LiveAccount; trade: ClosedTrade | null } {
   const pos = acc.positions[pair]
   if (!pos) return { acc, trade: null }
-  const pnl = unrealizedPnl(pair, pos, mid)
+  const pnl = unrealizedPnl(pair, pos, mid, krw)
   const positions = { ...acc.positions }
   delete positions[pair]
   return {
@@ -80,7 +86,7 @@ export function stopOutAll(acc: LiveAccount, mids: Mids, now: number): { acc: Li
   const trades: ClosedTrade[] = []
   let a = acc
   for (const [pair, pos] of entries(acc)) {
-    const r = closeLive(a, pair, mids[pair] ?? pos.entry, now, 'stopout')
+    const r = closeLive(a, pair, mids[pair] ?? pos.entry, krwOf(mids) ?? FALLBACK_KRW, now, 'stopout')
     a = r.acc
     if (r.trade) trades.push(r.trade)
   }

@@ -12,7 +12,7 @@ test('rejects mismatched, empty or non-positive data', () => {
   expect(() => validateSeries({ id: 'x', t: [1, 2], p: [1, 0] })).toThrow()
   expect(() => validateSeries(null)).toThrow()
 })
-test('catalog has four historic and three recent scenarios', () => {
+test('catalog has four historic and four recent scenarios', () => {
   expect(HISTORIC_SCENARIOS.map(s => s.id)).toEqual(['yen-crash-2022', 'covid-dollar-2020', 'brexit-2016', 'carry-unwind-2024'])
-  expect(RECENT_SCENARIOS.map(s => s.id)).toEqual(['recent-eurusd', 'recent-gbpusd', 'recent-audusd'])
+  expect(RECENT_SCENARIOS.map(s => s.id)).toEqual(['recent-eurusd', 'recent-gbpusd', 'recent-audusd', 'recent-usdcad'])
 })

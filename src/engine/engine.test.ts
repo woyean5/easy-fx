@@ -50,3 +50,24 @@ describe('engine', () => {
     expect(a.balance).toBeLessThan(10000)
   })
 })
+
+describe('KRW account', () => {
+  const krwAcc: Account = { balance: 10_000_000, position: null }
+  test('margin in won is converted to a dollar notional; pnl comes back in won', () => {
+    const a = open(krwAcc, 'USDJPY', 'buy', 1_350_000, 1, 150, 1350)
+    expect(a.position!.units).toBeCloseTo(1000, 6)
+    const usd = (1000 * (150.995 - 150.005)) / 150.995
+    expect(unrealizedPnl('USDJPY', a.position!, 151, 1350)).toBeCloseTo(usd * 1350, 2)
+    expect(equity(a, 'USDJPY', 151, 1350)).toBeCloseTo(10_000_000 + usd * 1350, 2)
+  })
+  test('EURUSD notional is margin × leverage ÷ krw', () => {
+    const a = open(krwAcc, 'EURUSD', 'buy', 1_350_000, 2, 1.1, 1350)
+    expect(a.position!.units * a.position!.entry).toBeCloseTo(2000, 6)
+  })
+  test('USDCAD uses a 1.5 pip spread and converts CAD pnl', () => {
+    const q = quote('USDCAD', 1.4)
+    expect(q.ask - q.bid).toBeCloseTo(0.00015, 8)
+    const a = open(acc0, 'USDCAD', 'sell', 1000, 1, 1.4)
+    expect(unrealizedPnl('USDCAD', a.position!, 1.3)).toBeCloseTo((1000 * (q.bid - (1.3 + 0.000075))) / (1.3 + 0.000075), 6)
+  })
+})

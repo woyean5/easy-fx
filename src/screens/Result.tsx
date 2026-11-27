@@ -3,7 +3,7 @@ import { PriceChart } from '../components/PriceChart'
 import { StopOutEffect } from '../components/StopOutEffect'
 import { lowerLeverage } from '../components/stopOut'
 import { START_BALANCE } from '../engine/engine'
-import { fmtPct, fmtUsd, PAIR_LABEL, type RoundResult } from './types'
+import { fmtPct, fmtWon, PAIR_LABEL, type RoundResult } from './types'
 import { summarize } from '../scenarios/recent'
 
 interface Props {
@@ -25,7 +25,7 @@ export function Result({ result, onRetry, onHome }: Props) {
       <div>
         <div className="muted small">{record.stoppedOut ? '강제청산으로 끝났어요' : trades.length === 0 ? '거래 없이 끝났어요' : '최종 수익률'}</div>
         <p className={`big num ${up ? 'up' : 'down'}`}>{fmtPct(record.returnPct)}</p>
-        <div className="num">{fmtUsd(START_BALANCE)} → <b>{fmtUsd(finalBalance)}</b></div>
+        <div className="num">{fmtWon(START_BALANCE)} → <b>{fmtWon(finalBalance)}</b></div>
       </div>
       <PriceChart series={series} upTo={series.p.length - 1} trades={trades} height={180} />
       <div className="story">

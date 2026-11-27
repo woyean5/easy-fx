@@ -58,7 +58,7 @@ function readJson<T>(key: string, fallback: T): T {
 
 export function getLive(now: number): LiveAccount {
   const v = readJson<LiveAccount | null>('live', null)
-  const ok = v && typeof v === 'object' && Number.isFinite(v.balance) && Number.isFinite(v.lastSeen) && v.positions && typeof v.positions === 'object'
+  const ok = v && typeof v === 'object' && v.currency === 'KRW' && Number.isFinite(v.balance) && Number.isFinite(v.lastSeen) && v.positions && typeof v.positions === 'object'
   return ok ? v : newLiveAccount(now)
 }
 export function saveLive(acc: LiveAccount): void { write('live', JSON.stringify(acc)) }
@@ -68,7 +68,7 @@ export function addLiveTrades(trades: ClosedTrade[]): void {
   if (trades.length) write('liveHistory', JSON.stringify([...getLiveHistory(), ...trades]))
 }
 
-/** 계좌를 $10,000로 되돌리고 실시간 거래 기록도 지운다. 시나리오 기록은 남긴다. */
+/** 계좌를 1,000만 원으로 되돌리고 실시간 거래 기록도 지운다. 시나리오 기록은 남긴다. */
 export function resetLive(now: number): void {
   saveLive(newLiveAccount(now))
   write('liveHistory', '[]')

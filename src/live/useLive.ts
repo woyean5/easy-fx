@@ -35,7 +35,9 @@ export interface StopOutNotice { at: number; offline: boolean; trades: ClosedTra
 export function useLive() {
   const [acc, setAcc] = useState<LiveAccount>(() => getLive(nowSec()))
   const [mids, setMids] = useState<Mids>({})
-  const [candles, setCandles] = useState<Partial<Record<LivePair, Candle[]>>>({})
+  // gen: 어느 세대(다시 열 때마다 +1)에 받은 봉인지. 지금 세대의 봉으로만 닫아둔 동안을 확인한다
+  const [candleState, setCandleState] = useState<{ gen: number; data: Partial<Record<LivePair, Candle[]>> }>({ gen: 0, data: {} })
+  const candles = candleState.data
   const [lastOk, setLastOk] = useState<Record<Feed, number | null>>({ kraken: null, coinbase: null })
   const [notice, setNotice] = useState<StopOutNotice | null>(null)
   const [tickVersion, setTickVersion] = useState(0)
@@ -44,6 +46,10 @@ export function useLive() {
   const candleInterval = useRef(900)
   const accRef = useRef(acc)
   accRef.current = acc
+  /** 숨겨진 시각. 숨겨진 동안(그리고 다시 보이기 처리 전)에는 마지막 확인 시각을 갱신하지 않는다 */
+  const hiddenAt = useRef<number | null>(null)
+  /** 다시 열 때마다 올라간다. 이전 세대에 보낸 봉 요청의 응답은 버린다 */
+  const generation = useRef(0)
   const pollers = useRef<{ kraken: () => Promise<void>; coinbase: () => Promise<void> } | null>(null)
 
   const commit = useCallback((next: LiveAccount, trades: ClosedTrade[] = []) => {
@@ -57,7 +63,6 @@ export function useLive() {
   useEffect(() => {
     let alive = true
     const timers: number[] = []
-    let hiddenAt: number | null = null
     const ok = (f: Feed) => setLastOk(x => ({ ...x, [f]: nowSec() }))
     const kraken = async () => {
       try {
@@ -78,14 +83,15 @@ export function useLive() {
     }
     pollers.current = { kraken, coinbase }
     const loadCandles = async () => {
+      const gen = generation.current
       const gap = nowSec() - accRef.current.lastSeen
       const minutes = gap > 6 * 86400 ? 240 : 15
       const res = await Promise.allSettled(KRAKEN_PAIRS.map(p => fetchCandles(p, minutes)))
-      if (!alive) return
+      if (!alive || gen !== generation.current) return
       const next: Partial<Record<LivePair, Candle[]>> = {}
       res.forEach((r, i) => { if (r.status === 'fulfilled') next[KRAKEN_PAIRS[i]] = r.value })
       candleInterval.current = minutes * 60
-      setCandles(c => ({ ...c, ...next }))
+      setCandleState(c => ({ gen, data: c.gen === gen ? { ...c.data, ...next } : next }))
     }
     const start = () => {
       kraken(); coinbase(); loadCandles()
@@ -93,16 +99,16 @@ export function useLive() {
     }
     const stop = () => { timers.forEach(clearInterval); timers.length = 0 }
     const onVis = () => {
-      if (document.hidden) { hiddenAt = nowSec(); stop(); return }
+      if (document.hidden) { hiddenAt.current = nowSec(); stop(); return }
       stop()
-      if (hiddenAt !== null && nowSec() - hiddenAt > RECHECK_AFTER_HIDDEN) {
+      if (hiddenAt.current !== null && nowSec() - hiddenAt.current > RECHECK_AFTER_HIDDEN) {
         // 백그라운드에서 돌아옴: 새 봉을 받은 뒤 닫아둔 동안을 다시 확인
+        generation.current += 1
         replayed.current = false
         startedAt.current = nowSec()
-        setCandles({})
         setLastOk({ kraken: null, coinbase: null })
       }
-      hiddenAt = null
+      hiddenAt.current = null
       start()
     }
     start()
@@ -120,7 +126,8 @@ export function useLive() {
     const a = accRef.current
     if (!replayed.current) {
       const haveQuotes = LIVE_PAIRS.every(p => mids[p] !== undefined || !a.positions[p])
-      const missingCandles = KRAKEN_PAIRS.some(p => a.positions[p] && !candles[p])
+      const needCandles = KRAKEN_PAIRS.some(p => a.positions[p])
+      const missingCandles = needCandles && (candleState.gen !== generation.current || KRAKEN_PAIRS.some(p => a.positions[p] && !candles[p]))
       if (!haveQuotes || missingCandles) return
       replayed.current = true
       const r = replayOffline(a, candles, mids, nowSec(), candleInterval.current)
@@ -132,7 +139,7 @@ export function useLive() {
       const r = stopOutAll(a, mids, nowSec())
       commit({ ...r.acc, lastSeen: nowSec() }, r.trades)
       setNotice({ at: nowSec(), offline: false, trades: r.trades })
-    } else if (nowSec() - a.lastSeen > 30 && !LIVE_PAIRS.some(p => a.positions[p] && feedDown(feedOf(p), nowSec()))) {
+    } else if (hiddenAt.current === null && nowSec() - a.lastSeen > 30 && !LIVE_PAIRS.some(p => a.positions[p] && feedDown(feedOf(p), nowSec()))) {
       commit({ ...a, lastSeen: nowSec() })
     }
   })

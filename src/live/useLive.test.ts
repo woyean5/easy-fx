@@ -60,3 +60,17 @@ test('returning from background after days re-checks the gap', async () => {
   expect(result.current.acc.positions).toEqual({})
   vi.restoreAllMocks()
 })
+
+test('a response that lands while hidden does not move lastSeen forward', async () => {
+  q.kraken.mockResolvedValue({ EURUSD: 1.1, GBPUSD: 1.3, AUDUSD: 0.66 })
+  q.candles.mockResolvedValue([{ t: now() - 60, o: 1.1, h: 1.1, l: 1.1, c: 1.1 }])
+  const { result } = renderHook(() => useLive())
+  await waitFor(() => expect(result.current.order('EURUSD', 'buy', 5000, 30)).toBe(true))
+  const seen = result.current.acc.lastSeen
+  vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
+  act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+  vi.spyOn(Date, 'now').mockReturnValue((now() + 3 * 86400) * 1000)
+  await act(async () => { await result.current.refresh() }) // 숨긴 뒤 도착한 응답
+  expect(result.current.acc.lastSeen).toBe(seen)
+  vi.restoreAllMocks()
+})

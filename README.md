@@ -1,54 +1,22 @@
-# React + TypeScript + Vite
+# Easy FX
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+20대를 위한 FX(외환) 모의투자 휴대폰 웹앱.
 
-Currently, two official plugins are available:
+- **실시간**: 지금 시세(Kraken, Coinbase)로 가상 $10,000 계좌를 굴려봐요. 레버리지, 증거금, 강제청산까지 실제 FX처럼.
+- **연습**: 엔화 대폭락, 브렉시트 같은 실제 과거 한 달을 5분에 재생해요.
+- **기록**: 거래 내역과 연습 결과.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+모의투자 앱이며 투자 권유가 아닙니다.
 
-## Expanding the ESLint configuration
+## 개발
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+npm install
+npm run dev      # 개발 서버
+npm test         # 테스트
+npm run build    # dist/ 에 빌드
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+연습 모드 데이터: [HistData](https://www.histdata.com/download-free-forex-historical-data/?/ascii/1-minute-bar-quotes)의 1분봉 CSV를 한 폴더에 풀고 `npm run convert-data -- <폴더>` → `public/scenarios/*.json` 생성.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+`main`에 push하면 GitHub Actions가 테스트, 빌드 후 GitHub Pages에 배포해요.

@@ -4,9 +4,10 @@ import { LIVE_PAIRS, PAIR_NAME_KO, type LivePair } from '../live/quotes'
 import type { LiveApi } from '../live/useLive'
 import { Sparkline } from '../components/Sparkline'
 import { InfoButton } from '../guide/InfoButton'
+import { isGuideDone } from '../storage/storage'
 import { fmtPct, fmtPrice, fmtUsd, PAIR_LABEL } from './types'
 
-export function LiveHome({ live, onOpen }: { live: LiveApi; onOpen: (p: LivePair) => void }) {
+export function LiveHome({ live, onOpen, onOpenGuide }: { live: LiveApi; onOpen: (p: LivePair) => void; onOpenGuide: () => void }) {
   const { acc, mids, offline } = live
   const eq = liveEquity(acc, mids)
   const ret = ((eq - START_BALANCE) / START_BALANCE) * 100
@@ -20,6 +21,13 @@ export function LiveHome({ live, onOpen }: { live: LiveApi; onOpen: (p: LivePair
         <h1>Easy FX</h1>
         <div className="subtitle">{today}</div>
       </header>
+
+      {!isGuideDone() && (
+        <button className="card guide-banner" onClick={onOpenGuide}>
+          <b>FX가 처음이세요? 입문 가이드 (2분)</b>
+          <div className="muted small">매수·매도, 레버리지, 강제청산을 쉽게 알려드려요</div>
+        </button>
+      )}
 
       {offline && <div className="banner">시세 연결이 끊겼어요. 다시 연결하는 중…</div>}
 

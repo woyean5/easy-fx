@@ -9,7 +9,8 @@ import { GuideCards } from './guide/GuideCards'
 import { NicknamePrompt } from './components/NicknamePrompt'
 import { TabBar, type Tab } from './components/TabBar'
 import { LiveStopOutNotice } from './components/LiveStopOutNotice'
-import { addRecord, getNickname } from './storage/storage'
+import { addRecord, getNickname, isOnboarded } from './storage/storage'
+import { Onboarding } from './guide/Onboarding'
 import { useLive } from './live/useLive'
 import type { LivePair } from './live/quotes'
 import type { Route } from './screens/types'
@@ -20,6 +21,7 @@ export default function App() {
   const [detail, setDetail] = useState<LivePair | null>(null)
   const [guide, setGuide] = useState(false)
   const [askName, setAskName] = useState(() => getNickname() === null)
+  const [onboard, setOnboard] = useState(() => !isOnboarded())
   const [round, setRound] = useState(0)
   const live = useLive()
 
@@ -49,7 +51,7 @@ export default function App() {
 
   return (
     <>
-      {tab === 'live' && <LiveHome live={live} onOpen={setDetail} />}
+      {tab === 'live' && <LiveHome live={live} onOpen={setDetail} onOpenGuide={() => setGuide(true)} />}
       {tab === 'practice' && (
         <Home
           onStart={(scenario, leverage) => start({ name: 'trade', scenario, leverage })}
@@ -62,8 +64,10 @@ export default function App() {
 
       {detail && <LiveDetail pair={detail} live={live} onClose={() => setDetail(null)} onOpenGuide={() => setGuide(true)} />}
       {live.notice && <LiveStopOutNotice notice={live.notice} onClose={live.dismissNotice} />}
-      {guide && <GuideCards onClose={() => setGuide(false)} />}
-      {askName && <NicknamePrompt onDone={() => setAskName(false)} />}
+      {/* 순서: 소개 → 닉네임 → (골랐다면) 입문 가이드 */}
+      {onboard && <Onboarding onDone={c => { setOnboard(false); if (c === 'guide') setGuide(true) }} />}
+      {!onboard && askName && <NicknamePrompt onDone={() => setAskName(false)} />}
+      {!onboard && !askName && guide && <GuideCards onClose={() => setGuide(false)} />}
     </>
   )
 }

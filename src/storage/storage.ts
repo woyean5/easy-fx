@@ -81,3 +81,6 @@ export function pushTick(pair: LivePair, t: number, p: number): void {
   if (ticks.length && ticks[ticks.length - 1].p === p && t - ticks[ticks.length - 1].t < 300) return
   write(`ticks:${pair}`, JSON.stringify([...ticks, { t, p }].slice(-MAX_TICKS)))
 }
+
+export function isOnboarded(): boolean { return read('onboarded') === '1' }
+export function setOnboarded(): void { write('onboarded', '1') }

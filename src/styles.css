@@ -178,3 +178,16 @@ input.text { width: 100%; height: 48px; border-radius: 12px; border: 1px solid v
 .stat-grid div + div { border-left: .5px solid var(--sep); }
 .stat-grid span { color: var(--muted); }
 .pill.flat { background: var(--surface-2); color: var(--text); }
+
+/* 첫 실행 소개 */
+.onboarding { position: fixed; inset: 0; z-index: 45; background: var(--bg); display: flex; flex-direction: column; max-width: 480px; margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom)); }
+.onb-top { display: flex; justify-content: space-between; height: 32px; }
+.onb-body { flex: 1; display: flex; flex-direction: column; justify-content: center; animation: fadein .3s ease-out; }
+.onb-icon { width: 96px; height: 96px; border-radius: 24px; background: var(--group); display: flex; align-items: center; justify-content: center; margin-bottom: 28px; }
+.onb-body h1 { font-size: 30px; font-weight: 800; letter-spacing: -.3px; margin: 0 0 14px; line-height: 1.25; }
+.onb-body p { font-size: 17px; line-height: 1.65; color: var(--muted); margin: 0; }
+.onboarding .dots { margin: 20px 0; }
+.onb-actions { display: flex; flex-direction: column; gap: 10px; }
+@keyframes fadein { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .onb-body { animation: none; } }

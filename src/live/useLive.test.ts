@@ -74,3 +74,15 @@ test('a response that lands while hidden does not move lastSeen forward', async 
   expect(result.current.acc.lastSeen).toBe(seen)
   vi.restoreAllMocks()
 })
+
+test('when every quote request fails, the hook reports offline (banner can show)', async () => {
+  q.kraken.mockRejectedValue(new Error('down'))
+  q.coinbase.mockRejectedValue(new Error('down'))
+  q.candles.mockRejectedValue(new Error('down'))
+  const { result } = renderHook(() => useLive())
+  await act(async () => { await new Promise(r => setTimeout(r, 20)) })
+  vi.spyOn(Date, 'now').mockReturnValue((now() + 20) * 1000)
+  await act(async () => { await result.current.refresh() })
+  expect(result.current.offline).toBe(true)
+  vi.restoreAllMocks()
+})

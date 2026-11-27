@@ -41,6 +41,8 @@ export function useLive() {
   const [lastOk, setLastOk] = useState<Record<Feed, number | null>>({ kraken: null, coinbase: null })
   const [notice, setNotice] = useState<StopOutNotice | null>(null)
   const [tickVersion, setTickVersion] = useState(0)
+  // 요청이 실패해도 화면을 다시 그려서 '연결 끊김'을 판단하게 한다
+  const [, setFailures] = useState(0)
   const startedAt = useRef(nowSec())
   const replayed = useRef(false)
   const candleInterval = useRef(900)
@@ -68,7 +70,7 @@ export function useLive() {
       try {
         const m = await fetchKraken()
         if (alive) { setMids(x => ({ ...x, ...m })); ok('kraken') }
-      } catch { /* 마지막 시세 유지, lastOk로 끊김 판단 */ }
+      } catch { if (alive) setFailures(n => n + 1) /* 마지막 시세 유지, lastOk로 끊김 판단 */ }
     }
     const coinbase = async () => {
       try {
@@ -79,7 +81,7 @@ export function useLive() {
         setMids(x => ({ ...x, ...m }))
         setTickVersion(v => v + 1)
         ok('coinbase')
-      } catch { /* 위와 같음 */ }
+      } catch { if (alive) setFailures(n => n + 1) }
     }
     pollers.current = { kraken, coinbase }
     const loadCandles = async () => {
@@ -122,6 +124,9 @@ export function useLive() {
   }
 
   // ── 강제청산 확인: 먼저 닫아둔 동안을 한 번 다시 보고, 그 뒤에만 실시간으로 본다 ──
+  // 의존성 없이 매 렌더마다 실행한다. 상태를 바꾸는 경우(재확인 1회, 강제청산, 30초마다 lastSeen)는
+  // 각각 다음 렌더에서 조건이 거짓이 되므로 반복되지 않는다.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const a = accRef.current
     if (!replayed.current) {
